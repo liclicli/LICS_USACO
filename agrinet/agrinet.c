@@ -51,11 +51,11 @@ void BuildEmptyBinHeap(binHeap *h, int len){
 }
 void UpMaintainBinHeap(binHeap *h, int pos){
   void *tmp = NULL;
-  if(CmpBinNode((binNode *)(h->list[pos/2]),(binNode *)(h->list[pos]))){
-    tmp = h->list[pos/2];
-    h->list[pos/2] = h->list[pos];
+  if(CmpBinNode((binNode *)(h->list[(pos-1)/2]),(binNode *)(h->list[pos]))){
+    tmp = h->list[(pos-1)/2];
+    h->list[(pos-1)/2] = h->list[pos];
     h->list[pos] = tmp;
-    UpMaintainBinHeap(h,pos/2);
+    UpMaintainBinHeap(h,(pos-1)/2);
   }
 }
 void InsBinHeap(binHeap *h, binNode *node){
@@ -110,7 +110,7 @@ void ResolveProblem(InputData *inputdata, OutputData *outputdata){
   *outputdata = 0;
   link_tree = malloc(inputdata->n*sizeof(int));
   memset(link_tree,0,inputdata->n*sizeof(int));
-  BuildEmptyBinHeap(&pathT,inputdata->n);
+  BuildEmptyBinHeap(&pathT,inputdata->n*(inputdata->n-1)/2);
   for(i = 0; i < inputdata->n; i++)
     for (j = 0; j < i; j++){
       InsBinHeap(&pathT,CreateBinNode(*GetPos(inputdata,j,i), j,i));
@@ -144,28 +144,6 @@ void ResolveProblem(InputData *inputdata, OutputData *outputdata){
 void WriteOut(FILE *f, OutputData *data){
   fprintf(f,"%d\n",*data);
 }
-void Test(){
-  binHeap pathT;
-  binNode *tmp_binnode = NULL;
-  int i = 0;
-  BuildEmptyBinHeap(&pathT,12);
-  InsBinHeap(&pathT,CreateBinNode(7,0,1));
-  InsBinHeap(&pathT,CreateBinNode(10,0,2));
-  InsBinHeap(&pathT,CreateBinNode(9,0,3));
-  InsBinHeap(&pathT,CreateBinNode(6,0,4));
-  InsBinHeap(&pathT,CreateBinNode(5,1,2));
-  InsBinHeap(&pathT,CreateBinNode(4,1,3));
-  InsBinHeap(&pathT,CreateBinNode(8,1,4));
-  InsBinHeap(&pathT,CreateBinNode(2,2,3));
-  InsBinHeap(&pathT,CreateBinNode(3,2,4));
-  InsBinHeap(&pathT,CreateBinNode(1,3,4));
-  while(pathT.len > 0){
-    tmp_binnode = GetBinHeapTop(&pathT);
-    printf("%d\n",tmp_binnode->dist);
-    RemoveBinHeapTop(&pathT);
-  }
-  ClearBinHeap(&pathT);
-}
 int main(){
   FILE *fin=fopen("agrinet.in","r");
   FILE *fout=fopen("agrinet.out","w");
@@ -176,6 +154,5 @@ int main(){
   WriteOut(fout,&outputdata);
   fclose(fin);
   fclose(fout);
-  //Test();
   return 0;
 }
