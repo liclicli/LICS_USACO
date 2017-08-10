@@ -53,6 +53,19 @@ int cmpRT(NodeData *a, NodeData *b){
   if(a->val > b->val) return -1;
   return 0;
 }
+void swapData(NodeData *a, NodeData *b){
+  int tmp = 0;
+  static int total = 0;
+  tmp = a->rt;
+  a->rt = b->rt;
+  b->rt = tmp;
+  tmp = a->len;
+  a->len = b->len;
+  b->len = tmp;
+  tmp = a->val;
+  a->val = b->val;
+  b->val = tmp;
+}
 void initNode(BinTree *t){
   t->lc = NULL;
   t->rc = NULL;
@@ -60,6 +73,38 @@ void initNode(BinTree *t){
   t->data.len = 0;
   t->data.val = 0;
   t->deep = 0;
+}
+void lspanTree(BinTree *t){
+  BinTree *tmp1, *tmp2, *tmp3;
+  int tmp = 0;
+  static int total = 0;
+  tmp1 = t->rc->lc;
+  tmp2 = t->rc->rc;
+  tmp3 = t->lc;
+  swapData(&(t->data),&(t->rc->data));
+  t->lc = t->rc;
+  t->lc->lc = tmp3;
+  t->lc->rc = tmp1;
+  t->rc = tmp2;
+}
+void rspanTree(BinTree *t){
+  BinTree *tmp1, *tmp2, *tmp3;
+  int tmp = 0;
+  static int total = 0;
+  tmp1 = t->lc->lc;
+  tmp2 = t->lc->rc;
+  tmp3 = t->rc;
+  swapData(&(t->data),&(t->lc->data));
+  t->rc = t->lc;
+  t->rc->lc = tmp2;
+  t->rc->rc = tmp3;
+  t->lc = tmp1;
+}
+int deepDis(BinTree *a, BinTree *b){
+  int ad = 0, bd = 0;
+  if(a == NULL) ad = -1; else ad = a->deep;
+  if(b == NULL) bd = -1; else bd = b->deep;
+  return ad - bd;
 }
 void insertTree(BinTree *t, int len, int val){
   NodeData data;
@@ -92,6 +137,14 @@ void insertTree(BinTree *t, int len, int val){
     insertTree(t->rc,len,val);
     t->deep = (t->rc->deep + 1)>t->deep?t->rc->deep + 1:t->deep;
   }
+  if(deepDis(t->lc, t->rc) > 1){
+    if(deepDis(t->lc->lc, t->lc->rc) < 0) lspanTree(t->lc);
+    rspanTree(t);
+  }else
+  if(deepDis(t->lc, t->rc) < -1){
+    if(deepDis(t->rc->lc, t->rc->rc) > 0) rspanTree(t->rc);
+    lspanTree(t);
+  }
 }
 void insertRTTree(BinTree *t,BinTree *rtt){
   int cmpres;
@@ -118,6 +171,14 @@ void insertRTTree(BinTree *t,BinTree *rtt){
     insertRTTree(t,rtt->rc);
     rtt->deep = (rtt->rc->deep + 1)>rtt->deep?rtt->rc->deep + 1:rtt->deep;
   }
+  if(deepDis(rtt->lc, rtt->rc) > 1){
+    if(deepDis(rtt->lc->lc, rtt->lc->rc) < 0) lspanTree(rtt->lc);
+    rspanTree(rtt);
+  }else
+  if(deepDis(rtt->lc, rtt->rc) < -1){
+    if(deepDis(rtt->rc->lc, rtt->rc->rc) > 0) rspanTree(rtt->rc);
+    lspanTree(rtt);
+  }
 }
 void traTree(BinTree *t,BinTree *rtt){
   if(t->lc != NULL) traTree(t->lc,rtt);
@@ -134,7 +195,8 @@ int traRTTree(FILE *fout,BinTree *t){
   convertValtoStr(str,t->data.len,t->data.val);
   if(t->lc != NULL) traRTTree(fout,t->lc);
   if(frec == t->data.rt){
-    fprintf(fout," %s",str);
+    if(line_num % 6 != 0)fprintf(fout," ");
+    fprintf(fout,"%s",str);
     line_num++;
     if(line_num % 6 == 0) {
       fprintf(fout,"\n");
@@ -165,6 +227,7 @@ int main() {
   int A,B;
   char ori[200001]={0};
   int i,j;
+  int total_len = 0;
   BinTree *root = NULL, *rtroot = NULL;
   fscanf(fin,"%d%d%d",&A,&B,&N);
   while (!feof(fin)){
@@ -173,9 +236,10 @@ int main() {
   }
   root = malloc(sizeof(BinTree));
   initNode(root);
-  for(i = 0; i < strlen(ori); i++){
+  total_len = strlen(ori);
+  for(i = 0; i < total_len; i++){
     for(j = A; j <= B; j++){
-      if(i+j <= strlen(ori)) insertTree(root,j,getStrVal(&ori[i],j));
+      if(i+j <= total_len) insertTree(root,j,getStrVal(&ori[i],j));
     }
   }
   rtroot = malloc(sizeof(BinTree));
